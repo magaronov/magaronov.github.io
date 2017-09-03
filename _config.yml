@@ -20,5 +20,5 @@ defaults:
     type: pages
   values:
     layout: page
-theme: jekyll-theme-cayman
+theme: cayman
 permalink: pretty

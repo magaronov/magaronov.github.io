@@ -30,7 +30,7 @@ plugins:
 - jekyll-remote-theme
 url: https://mydomain.com
 baseurl: 
-description: This is my new website
+description: Entrepreneur, technology consultant, developer
 permalink: pretty
 logo: https://s.gravatar.com/avatar/1680544adb6c9653fae32323565dc213?s=50
 paginate: 5

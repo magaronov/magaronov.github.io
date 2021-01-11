@@ -1,13 +1,23 @@
-# Set theme
-remote_theme: daviddarnes/alembic
+---
+title: My website
+timezone: UTC
+collections:
+  posts:
+    title: Posts
+    output: true
+    description: My thoughts and ideas
+    feature_text: 'Welcome to my blog
 
-# File excludes
+'
+    feature_image: https://picsum.photos/2560/600?image=866
+  uploads:
+    title: Uploads
+    output: true
+remote_theme: daviddarnes/alembic
 exclude:
 - README.md
 - Gemfile
 - Gemfile.lock
-
-# Set plugins
 plugins:
 - jekyll-sitemap
 - jekyll-mentions
@@ -18,39 +28,20 @@ plugins:
 - jekyll-feed
 - jemoji
 - jekyll-remote-theme
-
-# Site settings
-url: 'https://mydomain.com'
+url: https://mydomain.com
 baseurl: ''
-title: 'My website'
-description: 'This is my new website'
+description: This is my new website
 permalink: pretty
-logo: "https://s.gravatar.com/avatar/1680544adb6c9653fae32323565dc213?s=50"
-
-# Pagination
+logo: https://s.gravatar.com/avatar/1680544adb6c9653fae32323565dc213?s=50
 paginate: 5
 paginate_path: blog/page:num
-
-# Header nav
 navigation_header:
 - title: Home
-  url: /
+  url: "/"
 - title: About
-  url: /about/
+  url: "/about/"
 - title: Blog
-  url: /blog/
-
-# Footer nav
+  url: "/blog/"
 navigation_footer:
 - title: Back to top
   url: "#top"
-
-# Collections
-collections:
-  posts:
-    title: Posts
-    output: true
-    description: "My thoughts and ideas"
-    feature_text: |
-      Welcome to my blog
-    feature_image: "https://picsum.photos/2560/600?image=866"

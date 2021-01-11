@@ -1,6 +1,6 @@
 ---
-title: My website
-timezone: UTC
+title: Maxim Agaronov
+timezone: America/Chicago
 collections:
   posts:
     title: Posts
@@ -29,7 +29,7 @@ plugins:
 - jemoji
 - jekyll-remote-theme
 url: https://mydomain.com
-baseurl: ''
+baseurl: 
 description: This is my new website
 permalink: pretty
 logo: https://s.gravatar.com/avatar/1680544adb6c9653fae32323565dc213?s=50

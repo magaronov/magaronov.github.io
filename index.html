@@ -13,9 +13,18 @@
     <body>
         <textarea style="font-size: 1.5em; line-height: 1.5em; background: rgb(20,20,20); color: rgb(190,190,190); width: 100%; height: 100%; border: none; outline: none; margin: 0; padding: 80px;" spellcheck="false" autofocus="" placeholder="Use me as a notepad!">Hi!
 
-I'm Max, and this site is a collection of things that I've built or liked, and wanted to put up for (mostly) my own use. For example, I often use this homepage as a minimal notepad for short same-day notes that I don't need to "save" anywhere. Try it yourself! Just delete all the text you see on this screen. :)
-            
-P.S. For professional stuff about me, or to get in touch, go here: https://www.linkedin.com/in/maximagaronov/         
+I'm Max, and this site is a collection of things that I've built or liked, and wanted to put up for (mostly) my own use.
+
+For example, I often use this homepage as a minimal notepad for short same-day notes that I don't need to "save" anywhere. Try it yourself! Just delete all the text you see on this screen. You can also triple-click to see something else. :)
+
+P.S. For professional stuff about me, or to get in touch, go here: https://www.linkedin.com/in/maximagaronov/
 </textarea>
     </body>
+    <script>
+        window.addEventListener('click', function (evt) {
+            if (evt.detail === 3) {
+                window.location.href = 'neonhexagrid.html';
+            }
+        });
+    </script>
 </html>

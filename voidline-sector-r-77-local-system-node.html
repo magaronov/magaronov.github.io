@@ -32,6 +32,8 @@
   .scene {
     position: relative;
     width: 460px;
+    max-width: calc(100vw - 32px);
+    margin: 16px;
   }
 
   /* ---- PANEL ---- */
@@ -40,7 +42,7 @@
     background: linear-gradient(170deg, #161d2a 0%, #121a24 40%, #151c28 100%);
     border: 2px solid rgba(0,255,200,0.15);
     border-radius: 6px;
-    padding: 36px 32px 28px;
+    padding: 36px clamp(16px, 4vw, 32px) 28px;
     box-shadow:
       0 0 60px rgba(0,255,200,0.08),
       0 0 120px rgba(0,255,200,0.04),
@@ -259,9 +261,9 @@
 
   .neon-sign {
     position: absolute;
-    top: -20px; left: -60px;
+    top: -20px; left: 0px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
+    font-size: clamp(10px, 3vw, 14px);
     color: #ff00aa;
     text-shadow: 0 0 8px #ff00aa, 0 0 20px #ff00aa, 0 0 40px #ff00aa;
     transform: rotate(-5deg);

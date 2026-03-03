@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local System Node</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .rain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 10;
+    background: repeating-linear-gradient(
+      transparent 0px, transparent 3px,
+      rgba(0,255,200,0.015) 3px, rgba(0,255,200,0.015) 4px
+    );
+    animation: rainMove 0.4s linear infinite;
+  }
+  @keyframes rainMove { to { background-position: 0 20px; } }
+
+  .scene {
+    position: relative;
+    width: 460px;
+  }
+
+  /* ---- PANEL ---- */
+  .panel {
+    position: relative;
+    background: linear-gradient(170deg, #161d2a 0%, #121a24 40%, #151c28 100%);
+    border: 2px solid rgba(0,255,200,0.15);
+    border-radius: 6px;
+    padding: 36px 32px 28px;
+    box-shadow:
+      0 0 60px rgba(0,255,200,0.08),
+      0 0 120px rgba(0,255,200,0.04),
+      inset 0 0 80px rgba(0,255,200,0.03);
+    overflow: hidden;
+  }
+
+  .panel-scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,255,200,0.02) 2px, rgba(0,255,200,0.02) 4px
+    );
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .panel-flicker {
+    animation: flicker 5s infinite;
+  }
+  @keyframes flicker {
+    0%, 97%, 100% { opacity: 1; }
+    97.5% { opacity: 0.85; }
+    98% { opacity: 1; }
+    98.5% { opacity: 0.9; }
+  }
+
+  /* ---- CRT GLITCH LINES (lives OUTSIDE panel to avoid recomposite) ---- */
+  .crt-lines-overlay {
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  .crt-line {
+    position: absolute;
+    top: 0;
+    height: 100%;
+  }
+
+  .glitch-wash {
+    position: absolute;
+    top: 0; left: 25%; width: 50%; height: 100%;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(200,0,255,0.05) 20%,
+      rgba(255,0,150,0.07) 40%,
+      rgba(200,0,255,0.04) 60%,
+      rgba(0,200,255,0.03) 80%,
+      transparent 100%
+    );
+    filter: blur(18px);
+    animation: washDrift 4s ease-in-out infinite alternate;
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes washDrift {
+    0%, 100% { transform: translateX(0); opacity: 0.5; }
+    50% { transform: translateX(12px); opacity: 0.8; }
+  }
+
+  /* ---- HEADER ---- */
+  .header {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 28px;
+  }
+  .header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 1.15;
+    color: #e8e8e8;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1);
+    letter-spacing: 1px;
+  }
+  .cite {
+    font-size: 11px;
+    color: rgba(0,255,200,0.5);
+    margin-top: 6px;
+    text-align: right;
+    line-height: 1.4;
+  }
+
+  /* ---- USER LIST ---- */
+  .user-list-container {
+    position: relative; z-index: 2;
+    height: 380px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+
+  .user-list {
+    will-change: transform;
+  }
+
+  @keyframes scrollList {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+
+  .user-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    gap: 0;
+    height: 54px;
+    position: relative;
+  }
+
+  .name-area {
+    position: relative;
+    flex: 1;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .redact-bar {
+    position: absolute;
+    top: 1px; left: 0; right: 0; bottom: 1px;
+    background: #0a0a0a;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.8);
+    overflow: hidden;
+  }
+  .redact-bar::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      rgba(200,0,255,0.35) 0%,
+      rgba(255,0,150,0.25) 30%,
+      rgba(0,200,255,0.2) 70%,
+      rgba(200,0,255,0.3) 100%
+    );
+    animation: barGlitch 3s ease-in-out infinite alternate;
+    opacity: 0.7;
+  }
+  @keyframes barGlitch {
+    0% { transform: scaleX(1); filter: hue-rotate(0deg); }
+    50% { transform: scaleX(1.02); filter: hue-rotate(20deg); }
+    100% { transform: scaleX(0.98); filter: hue-rotate(-10deg); }
+  }
+
+  .char-layer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    white-space: nowrap;
+  }
+
+  .char-layer .ch {
+    font-size: 34px;
+    font-weight: bold;
+    color: #00ffc8;
+    text-shadow: 0 0 12px rgba(0,255,200,0.6), 0 0 30px rgba(0,255,200,0.2);
+    letter-spacing: 2px;
+    width: 0.65em;
+    text-align: center;
+    display: inline-block;
+    line-height: 30px;
+  }
+
+  .char-layer .ch.hidden { visibility: hidden; }
+
+  .char-layer .ch.flash-in { animation: charFlash 0.3s ease-out; }
+
+  .char-layer .ch.glyph {
+    color: rgba(0,255,200,0.5);
+    text-shadow: 0 0 8px rgba(0,255,200,0.4), 0 0 20px rgba(0,255,200,0.15);
+  }
+
+  @keyframes charFlash {
+    0% { opacity: 0.3; text-shadow: 0 0 20px rgba(0,255,200,1), 0 0 45px rgba(0,255,200,0.6); }
+    50% { opacity: 1; text-shadow: 0 0 14px rgba(0,255,200,0.8), 0 0 30px rgba(0,255,200,0.4); }
+    100% { opacity: 1; }
+  }
+
+  .dash {
+    color: rgba(0,255,200,0.5);
+    font-size: 28px;
+    margin: 0 6px 0 10px;
+    flex-shrink: 0;
+  }
+
+  .user-code {
+    font-size: 34px;
+    font-weight: bold;
+    color: #00ffc8;
+    text-shadow: 0 0 12px rgba(0,255,200,0.6), 0 0 30px rgba(0,255,200,0.2);
+    min-width: 100px;
+    text-align: right;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .footer-cite {
+    position: relative; z-index: 2;
+    text-align: right;
+    margin-top: 12px;
+  }
+
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none; z-index: 4;
+  }
+
+  .neon-sign {
+    position: absolute;
+    top: -20px; left: -60px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: #ff00aa;
+    text-shadow: 0 0 8px #ff00aa, 0 0 20px #ff00aa, 0 0 40px #ff00aa;
+    transform: rotate(-5deg);
+    opacity: 0.7;
+    z-index: 6;
+    animation: neonPulse 2s ease-in-out infinite alternate;
+  }
+  @keyframes neonPulse {
+    0% { opacity: 0.5; text-shadow: 0 0 5px #ff00aa, 0 0 15px #ff00aa; }
+    100% { opacity: 0.8; text-shadow: 0 0 10px #ff00aa, 0 0 25px #ff00aa, 0 0 50px #ff00aa; }
+  }
+
+  .ambient-light {
+    position: fixed;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ambient-light.cyan { background: rgba(0,255,200,0.06); top: 20%; right: 10%; }
+  .ambient-light.pink { background: rgba(255,0,150,0.05); bottom: 20%; left: 10%; }
+
+  .ghost-row { opacity: 0.55; }
+  .ghost-row .redact-bar::after { opacity: 0.3; }
+</style>
+</head>
+<body>
+
+<div class="ambient-light cyan"></div>
+<div class="ambient-light pink"></div>
+<div class="rain"></div>
+
+<div class="scene">
+  <div class="neon-sign panel-flicker">Voidline Sector R-77</div>
+
+  <div class="panel panel-flicker">
+    <div class="panel-scanlines"></div>
+    <div class="glitch-wash"></div>
+    <div class="vignette"></div>
+
+    <div class="header">
+      <h1>LOCAL SYSTEM<br>NODE</h1>
+      <div class="cite">[cite: 1.2,<br>1.4]</div>
+    </div>
+
+    <div class="user-list-container">
+      <div class="user-list" id="userList"></div>
+    </div>
+
+    <div class="footer-cite">
+      <span class="cite">[cite: 1.5, 1.4]</span>
+    </div>
+  </div>
+
+  <!-- CRT lines live OUTSIDE the panel so rebuilds can never touch them -->
+  <div class="crt-lines-overlay" id="crtLines"></div>
+</div>
+
+<script>
+const USERS = [
+  "Spellsever",
+  "Timerwoolf",
+  "DirtyApples",
+  "SapphyTaff",
+  "Ghost",
+  "CamaronesX",
+  "Beav815"
+];
+
+const MAX_CHARS = 14;
+const GLYPHS = "?λ%Ξ#Σ∆Ψ@¥Ω∞§†‡¿¶∂∮≈";
+
+function genCode() {
+  const c = "0123456789ABCDEF?" + GLYPHS;
+  let s = "";
+  for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function randGlyph() { return GLYPHS[Math.floor(Math.random() * GLYPHS.length)]; }
+
+function renderChars(name, revealRatio) {
+  const upper = name.toUpperCase();
+  const indices = [];
+  for (let i = 0; i < upper.length; i++) {
+    if (upper[i] !== '-' && upper[i] !== ' ') indices.push(i);
+  }
+  const shuffled = [...indices].sort(() => Math.random() - 0.5);
+  const cnt = Math.max(1, Math.round(indices.length * revealRatio));
+  const revealSet = new Set(shuffled.slice(0, cnt));
+  let html = '';
+  for (let i = 0; i < MAX_CHARS; i++) {
+    if (i < upper.length) {
+      const c = upper[i];
+      if (c === '-' || c === ' ') {
+        html += `<span class="ch">${c}</span>`;
+      } else if (revealSet.has(i)) {
+        html += `<span class="ch" data-idx="${i}">${c}</span>`;
+      } else {
+        html += `<span class="ch hidden" data-idx="${i}">${c}</span>`;
+      }
+    } else {
+      html += `<span class="ch hidden"></span>`;
+    }
+  }
+  return html;
+}
+
+function renderGhostChars() {
+  const len = randInt(5, 12);
+  const glyphCount = randInt(1, 2);
+  const positions = new Set();
+  while (positions.size < glyphCount) positions.add(randInt(0, len - 1));
+  let html = '';
+  for (let i = 0; i < MAX_CHARS; i++) {
+    if (i < len && positions.has(i)) {
+      html += `<span class="ch glyph" data-idx="${i}">${randGlyph()}</span>`;
+    } else {
+      html += `<span class="ch hidden"></span>`;
+    }
+  }
+  return html;
+}
+
+function generateEntries() {
+  let entries = USERS.map(n => ({ name: n, ghost: false }));
+  const gc = randInt(3, 5);
+  for (let i = 0; i < gc; i++) {
+    entries.splice(randInt(0, entries.length), 0, { name: null, ghost: true });
+  }
+  return entries;
+}
+
+function buildList() {
+  const el = document.getElementById("userList");
+  const entries = generateEntries();
+  const all = [...entries, ...entries];
+  const dur = entries.length * 2.5;
+  el.innerHTML = all.map(e => {
+    const chars = e.ghost ? renderGhostChars() : renderChars(e.name, 0.35);
+    return `
+      <div class="user-row ${e.ghost ? 'ghost-row' : ''}" data-name="${e.name || ''}" data-ghost="${e.ghost}">
+        <div class="name-area">
+          <div class="redact-bar"></div>
+          <div class="char-layer">${chars}</div>
+        </div>
+        <span class="dash">-</span>
+        <span class="user-code">${genCode()}</span>
+      </div>`;
+  }).join("");
+  el.style.animation = `scrollList ${dur}s linear infinite`;
+}
+
+// ---- CRT LINES (completely independent of panel) ----
+(function spawnCRTLines() {
+  const container = document.getElementById('crtLines');
+  const colors = [
+    'rgba(200,0,255,', 'rgba(255,0,150,', 'rgba(0,200,255,',
+    'rgba(0,255,200,', 'rgba(255,100,200,', 'rgba(150,0,255,'
+  ];
+  for (let i = 0; i < 36; i++) {
+    const el = document.createElement('div');
+    el.className = 'crt-line';
+    const col = colors[Math.floor(Math.random() * colors.length)];
+    const alpha = (0.3 + Math.random() * 0.5).toFixed(2);
+    const peak = 0.3 + Math.random() * 0.5;
+    const w = 1 + Math.random() * 3;
+    const dur = 8 + Math.random() * 12; // slow: 8-20s
+    const left = 5 + Math.random() * 90;
+    const blur = 0.5 + Math.random() * 2;
+    // Use inline keyframes via Web Animations API to be fully independent
+    el.style.left = left + '%';
+    el.style.width = w + 'px';
+    el.style.background = `linear-gradient(180deg, transparent 0%, ${col}${alpha}) 30%, ${col}${(alpha*0.7).toFixed(2)}) 70%, transparent 100%)`;
+    el.style.filter = `blur(${blur.toFixed(1)}px)`;
+    el.style.opacity = peak;
+    // Animate with Web Animations API — totally immune to DOM changes
+    el.animate([
+      { opacity: peak },
+      { opacity: peak * 0.6 },
+      { opacity: peak },
+      { opacity: peak * 0.8 },
+      { opacity: peak * 0.2 },
+      { opacity: 0 },
+      { opacity: 0 },
+      { opacity: peak * 0.5 },
+      { opacity: 0 },
+      { opacity: peak * 0.3 },
+      { opacity: peak }
+    ], {
+      duration: dur * 1000,
+      iterations: Infinity,
+      easing: 'ease-in-out'
+    });
+    container.appendChild(el);
+  }
+})();
+
+// ---- Flicker redactions ----
+function flickerRedactions() {
+  document.querySelectorAll('.user-row').forEach(row => {
+    const name = row.dataset.name;
+    const isGhost = row.dataset.ghost === 'true';
+    const layer = row.querySelector('.char-layer');
+    if (!layer || Math.random() > 0.25) return;
+    const oldVis = {};
+    layer.querySelectorAll('.ch[data-idx]').forEach(s => {
+      oldVis[s.dataset.idx] = !s.classList.contains('hidden');
+    });
+    if (isGhost) {
+      layer.innerHTML = renderGhostChars();
+      layer.querySelectorAll('.ch.glyph').forEach(s => {
+        s.classList.add('flash-in');
+        s.addEventListener('animationend', () => s.classList.remove('flash-in'), { once: true });
+      });
+    } else if (name) {
+      layer.innerHTML = renderChars(name, 0.35);
+      layer.querySelectorAll('.ch[data-idx]').forEach(s => {
+        const idx = s.dataset.idx;
+        const wasVis = oldVis[idx] || false;
+        const isVis = !s.classList.contains('hidden');
+        if (isVis && !wasVis) {
+          s.classList.add('flash-in');
+          s.addEventListener('animationend', () => s.classList.remove('flash-in'), { once: true });
+        }
+      });
+    }
+  });
+}
+
+function glitchCodes() {
+  document.querySelectorAll('.user-code').forEach(el => {
+    if (Math.random() < 0.12) {
+      el.textContent = genCode();
+      el.style.opacity = '0.6';
+      setTimeout(() => el.style.opacity = '1', 100);
+    }
+  });
+}
+
+let rebuildTimer = 0;
+function maybeRebuild() {
+  rebuildTimer++;
+  if (rebuildTimer > 30) { rebuildTimer = 0; buildList(); }
+}
+
+buildList();
+setInterval(flickerRedactions, 4000);
+setInterval(glitchCodes, 800);
+setInterval(maybeRebuild, 2000);
+</script>
+</body>
+</html>
